@@ -1,3 +1,5 @@
+[English](README.md) | [日本語](README.ja.md) | [中文](README.zh.md) | [한국어](README.ko.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português](README.pt.md)
+
 # Code Harness
 
 **The control center for AI code editors.**

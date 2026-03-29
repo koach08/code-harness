@@ -18,9 +18,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - run: npm run build:mac
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - run: npx electron-builder --mac dmg --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: mac-dmg
@@ -34,12 +32,11 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - run: npm run build:win
+      - run: npx electron-builder --win --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: win-exe
-          path: |
-            dist/*.exe
+          path: dist/*.exe
 
   build-linux:
     runs-on: ubuntu-latest
@@ -49,7 +46,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - run: npm run build:linux
+      - run: npx electron-builder --linux --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: linux-builds
@@ -70,9 +67,9 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/mac-dmg/*.dmg
-            artifacts/win-exe/*.exe
-            artifacts/linux-builds/*.AppImage
-            artifacts/linux-builds/*.deb
+            artifacts/**/*.dmg
+            artifacts/**/*.exe
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
           draft: false
           prerelease: false
