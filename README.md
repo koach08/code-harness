@@ -107,6 +107,13 @@ Code Harness gives you a visual interface to manage all of these — no manual f
 
 Each user runs AI tools with **their own accounts and API keys**. Code Harness is a UI layer — no keys are stored or shared.
 
+## Support
+
+If you find Code Harness useful, consider supporting development:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/ariyabridge)
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-sponsor-pink?logo=github)](https://github.com/sponsors/koach08)
+
 ## Related
 
 This project evolved from [claude-code-desktop](https://github.com/koach08/claude-code-desktop).
