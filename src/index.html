@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Code Harness</title>
+  <link rel="stylesheet" href="../node_modules/xterm/css/xterm.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-ui="simple">
+  <div id="app">
+    <!-- Top Bar -->
+    <div id="topbar">
+      <div id="drag-region"></div>
+      <div id="tabs"></div>
+      <button id="new-tab-btn" data-i18n-title="tab.new" title="New Tab (Cmd+T)">+</button>
+      <div id="topbar-spacer"></div>
+      <div id="mode-toggle">
+        <button class="mode-btn active" data-mode="claude">Claude</button>
+        <button class="mode-btn" data-mode="codex">Codex</button>
+        <button class="mode-btn" data-mode="aider">Aider</button>
+        <button class="mode-btn" data-mode="shell">Terminal</button>
+      </div>
+      <div id="ui-toggle">
+        <button class="ui-btn active" data-ui="simple" data-i18n="ui.simple">Simple</button>
+        <button class="ui-btn" data-ui="advanced" data-i18n="ui.advanced">Advanced</button>
+        <button class="ui-btn" data-ui="builder" data-i18n="ui.builder">Builder</button>
+        <button class="ui-btn" data-ui="harness" data-i18n="ui.harness">Harness</button>
+      </div>
+      <button id="settings-btn" data-i18n-title="menu.settings" title="Settings (Cmd+,)">&#9881;</button>
+    </div>
+
+    <!-- Main Area -->
+    <div id="main">
+      <!-- Terminal -->
+      <div id="terminal-container"></div>
+
+      <!-- Builder Panel (right side) -->
+      <div id="builder-panel">
+        <div id="builder-header">
+          <h3 data-i18n="builder.title">App Builder</h3>
+          <button id="builder-scan-btn" class="builder-action-btn" data-i18n="builder.scan">Scan Project</button>
+        </div>
+
+        <div id="builder-project-info">
+          <div id="builder-no-project">
+            <p data-i18n="builder.scan.prompt">Scan your project to detect stack</p>
+            <small data-i18n="builder.scan.sub">Analyzes the current working directory</small>
+          </div>
+          <div id="builder-detected" class="hidden">
+            <div class="bp-row"><span class="bp-label" data-i18n="builder.project">Project</span><span id="bp-name">-</span></div>
+            <div class="bp-row"><span class="bp-label" data-i18n="builder.framework">Framework</span><span id="bp-framework">-</span></div>
+            <div class="bp-row"><span class="bp-label" data-i18n="builder.language">Language</span><span id="bp-language">-</span></div>
+            <div class="bp-row"><span class="bp-label" data-i18n="builder.configs">Configs</span><span id="bp-configs">-</span></div>
+          </div>
+        </div>
+
+        <div id="builder-sections">
+          <div class="builder-section">
+            <h4 data-i18n="builder.section.web">Web Apps</h4>
+            <div class="builder-cards">
+              <div class="bcard" data-target="build-saas"><div class="bcard-icon">&#9881;</div><div class="bcard-name" data-i18n="card.saas">SaaS / Dashboard</div><div class="bcard-desc" data-i18n="card.saas.desc">Admin panels & tools</div></div>
+              <div class="bcard" data-target="build-lp"><div class="bcard-icon">&#9733;</div><div class="bcard-name" data-i18n="card.lp">Landing Page</div><div class="bcard-desc" data-i18n="card.lp.desc">Marketing page</div></div>
+              <div class="bcard" data-target="build-ec"><div class="bcard-icon">&#128722;</div><div class="bcard-name" data-i18n="card.ec">E-Commerce</div><div class="bcard-desc" data-i18n="card.ec.desc">Online shop</div></div>
+              <div class="bcard" data-target="build-booking"><div class="bcard-icon">&#128197;</div><div class="bcard-name" data-i18n="card.booking">Booking System</div><div class="bcard-desc" data-i18n="card.booking.desc">Reservations & scheduling</div></div>
+              <div class="bcard" data-target="build-community"><div class="bcard-icon">&#128101;</div><div class="bcard-name" data-i18n="card.community">SNS / Community</div><div class="bcard-desc" data-i18n="card.community.desc">Forums, chat, boards</div></div>
+              <div class="bcard" data-target="build-biztools"><div class="bcard-icon">&#128188;</div><div class="bcard-name" data-i18n="card.biztools">Business App</div><div class="bcard-desc" data-i18n="card.biztools.desc">Internal tools & workflows</div></div>
+              <div class="bcard" data-target="build-portfolio"><div class="bcard-icon">&#127912;</div><div class="bcard-name" data-i18n="card.portfolio">Portfolio</div><div class="bcard-desc" data-i18n="card.portfolio.desc">Personal / corporate site</div></div>
+              <div class="bcard" data-target="build-blog"><div class="bcard-icon">&#128221;</div><div class="bcard-name" data-i18n="card.blog">Blog / Media</div><div class="bcard-desc" data-i18n="card.blog.desc">CMS-powered site</div></div>
+            </div>
+          </div>
+
+          <div class="builder-section">
+            <h4 data-i18n="builder.section.native">Native / Mobile</h4>
+            <div class="builder-cards">
+              <div class="bcard" data-target="build-ios"><div class="bcard-icon">&#63743;</div><div class="bcard-name" data-i18n="card.ios">iOS App</div><div class="bcard-desc" data-i18n="card.ios.desc">App Store ready</div></div>
+              <div class="bcard" data-target="build-android"><div class="bcard-icon">&#9679;</div><div class="bcard-name" data-i18n="card.android">Android App</div><div class="bcard-desc" data-i18n="card.android.desc">Play Store ready</div></div>
+              <div class="bcard" data-target="build-cross"><div class="bcard-icon">&#128241;</div><div class="bcard-name" data-i18n="card.cross">Cross-platform</div><div class="bcard-desc" data-i18n="card.cross.desc">iOS + Android</div></div>
+              <div class="bcard" data-target="build-pwa"><div class="bcard-icon">&#127760;</div><div class="bcard-name" data-i18n="card.pwa">PWA</div><div class="bcard-desc" data-i18n="card.pwa.desc">Installable web app</div></div>
+            </div>
+          </div>
+
+          <div class="builder-section">
+            <h4 data-i18n="builder.section.wordpress">WordPress</h4>
+            <div class="builder-cards">
+              <div class="bcard" data-target="build-wp-theme"><div class="bcard-icon">&#127912;</div><div class="bcard-name" data-i18n="card.wp.theme">Theme</div><div class="bcard-desc" data-i18n="card.wp.theme.desc">Custom design</div></div>
+              <div class="bcard" data-target="build-wp-plugin"><div class="bcard-icon">&#128268;</div><div class="bcard-name" data-i18n="card.wp.plugin">Plugin</div><div class="bcard-desc" data-i18n="card.wp.plugin.desc">Custom functionality</div></div>
+              <div class="bcard" data-target="build-wp-ec"><div class="bcard-icon">&#128722;</div><div class="bcard-name" data-i18n="card.wp.ec">WooCommerce</div><div class="bcard-desc" data-i18n="card.wp.ec.desc">WordPress e-commerce</div></div>
+            </div>
+          </div>
+
+          <div class="builder-divider"></div>
+
+          <div class="builder-section">
+            <h4 data-i18n="builder.section.deploy">Web / SaaS Deploy</h4>
+            <div class="builder-cards">
+              <div class="bcard" data-target="vercel"><div class="bcard-icon">&#9650;</div><div class="bcard-name">Vercel</div><div class="bcard-desc" data-i18n="card.vercel.desc">Next.js / React</div></div>
+              <div class="bcard" data-target="railway"><div class="bcard-icon">&#9654;</div><div class="bcard-name">Railway</div><div class="bcard-desc" data-i18n="card.railway.desc">API / Backend</div></div>
+              <div class="bcard" data-target="netlify"><div class="bcard-icon">&#9670;</div><div class="bcard-name">Netlify</div><div class="bcard-desc" data-i18n="card.netlify.desc">Static / JAMstack</div></div>
+              <div class="bcard" data-target="streamlit-cloud"><div class="bcard-icon">&#9733;</div><div class="bcard-name">Streamlit</div><div class="bcard-desc" data-i18n="card.streamlit.desc">Python App</div></div>
+              <div class="bcard" data-target="docker"><div class="bcard-icon">&#9638;</div><div class="bcard-name">Docker</div><div class="bcard-desc" data-i18n="card.docker.desc">Containerize</div></div>
+            </div>
+          </div>
+
+          <div class="builder-section">
+            <h4 data-i18n="builder.section.desktop">Desktop Apps</h4>
+            <div class="builder-cards">
+              <div class="bcard" data-target="electron-mac"><div class="bcard-icon">&#63743;</div><div class="bcard-name" data-i18n="card.electron.mac">macOS</div><div class="bcard-desc" data-i18n="card.electron.mac.desc">Electron .dmg</div></div>
+              <div class="bcard" data-target="electron-win"><div class="bcard-icon">&#8862;</div><div class="bcard-name" data-i18n="card.electron.win">Windows</div><div class="bcard-desc" data-i18n="card.electron.win.desc">Electron .exe</div></div>
+              <div class="bcard" data-target="electron-linux"><div class="bcard-icon">&#9655;</div><div class="bcard-name" data-i18n="card.electron.linux">Linux</div><div class="bcard-desc" data-i18n="card.electron.linux.desc">Electron .AppImage</div></div>
+              <div class="bcard" data-target="tauri"><div class="bcard-icon">&#9881;</div><div class="bcard-name">Tauri</div><div class="bcard-desc" data-i18n="card.tauri.desc">Lightweight native</div></div>
+            </div>
+          </div>
+
+          <div class="builder-section">
+            <h4 data-i18n="builder.section.mobile">Mobile Apps</h4>
+            <div class="builder-cards">
+              <div class="bcard" data-target="capacitor-ios"><div class="bcard-icon">&#63743;</div><div class="bcard-name" data-i18n="card.capacitor.ios">iOS</div><div class="bcard-desc" data-i18n="card.capacitor.ios.desc">Capacitor / Xcode</div></div>
+              <div class="bcard" data-target="capacitor-android"><div class="bcard-icon">&#9679;</div><div class="bcard-name" data-i18n="card.capacitor.android">Android</div><div class="bcard-desc" data-i18n="card.capacitor.android.desc">Capacitor / Studio</div></div>
+              <div class="bcard" data-target="xcode-native"><div class="bcard-icon">&#9874;</div><div class="bcard-name" data-i18n="card.swift">Swift Native</div><div class="bcard-desc" data-i18n="card.swift.desc">Xcode project</div></div>
+              <div class="bcard" data-target="flutter"><div class="bcard-icon">&#10070;</div><div class="bcard-name">Flutter</div><div class="bcard-desc" data-i18n="card.flutter.desc">iOS + Android</div></div>
+            </div>
+          </div>
+
+          <div class="builder-section">
+            <h4 data-i18n="builder.section.infra">Infrastructure</h4>
+            <div class="builder-cards">
+              <div class="bcard" data-target="supabase"><div class="bcard-icon">&#9881;</div><div class="bcard-name">Supabase</div><div class="bcard-desc" data-i18n="card.supabase.desc">DB + Auth + Storage</div></div>
+              <div class="bcard" data-target="firebase"><div class="bcard-icon">&#9888;</div><div class="bcard-name">Firebase</div><div class="bcard-desc" data-i18n="card.firebase.desc">BaaS</div></div>
+              <div class="bcard" data-target="stripe"><div class="bcard-icon">&#36;</div><div class="bcard-name">Stripe</div><div class="bcard-desc" data-i18n="card.stripe.desc">Payments</div></div>
+              <div class="bcard" data-target="auth"><div class="bcard-icon">&#128274;</div><div class="bcard-name" data-i18n="card.auth">Auth</div><div class="bcard-desc" data-i18n="card.auth.desc">OAuth / SSO</div></div>
+              <div class="bcard" data-target="ci-cd"><div class="bcard-icon">&#8634;</div><div class="bcard-name">CI/CD</div><div class="bcard-desc" data-i18n="card.cicd.desc">GitHub Actions</div></div>
+              <div class="bcard" data-target="domain-ssl"><div class="bcard-icon">&#127760;</div><div class="bcard-name" data-i18n="card.domain">Domain</div><div class="bcard-desc" data-i18n="card.domain.desc">DNS + SSL</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Harness Panel (right side) -->
+      <div id="harness-panel">
+        <div id="harness-header">
+          <h3 data-i18n="harness.title">Harness Engineering</h3>
+        </div>
+
+        <!-- CLAUDE.md Editor -->
+        <div class="harness-section" id="harness-claudemd">
+          <div class="harness-section-header" data-collapse="claudemd">
+            <h4 data-i18n="harness.claudemd">CLAUDE.md</h4>
+            <span class="harness-badge" id="claudemd-badge"></span>
+            <span class="harness-chevron">&#9660;</span>
+          </div>
+          <p class="harness-desc" data-i18n="harness.claudemd.desc">Project instructions for AI</p>
+          <div class="harness-section-body" id="claudemd-body">
+            <div id="claudemd-empty" class="harness-empty">
+              <p data-i18n="harness.claudemd.empty">No CLAUDE.md found in this project.</p>
+              <button class="harness-btn primary" id="claudemd-create-btn" data-i18n="harness.claudemd.create">Create CLAUDE.md</button>
+            </div>
+            <div id="claudemd-editor" class="hidden">
+              <textarea id="claudemd-textarea" spellcheck="false" placeholder="# Project Instructions&#10;&#10;- Build commands: npm run build&#10;- Test: npm test"></textarea>
+              <div class="harness-editor-actions">
+                <button class="harness-btn primary" id="claudemd-save-btn" data-i18n="harness.claudemd.save">Save</button>
+                <span id="claudemd-status"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hooks Config -->
+        <div class="harness-section" id="harness-hooks">
+          <div class="harness-section-header" data-collapse="hooks">
+            <h4 data-i18n="harness.hooks">Hooks</h4>
+            <span class="harness-badge" id="hooks-badge"></span>
+            <span class="harness-chevron">&#9660;</span>
+          </div>
+          <p class="harness-desc" data-i18n="harness.hooks.desc">Auto-run commands on events</p>
+          <div class="harness-section-body" id="hooks-body">
+            <div id="hooks-empty" class="harness-empty">
+              <p data-i18n="harness.hooks.empty">No hooks configured.</p>
+            </div>
+            <div id="hooks-list"></div>
+            <button class="harness-btn" id="hooks-add-btn" data-i18n="harness.hooks.add">Add Hook</button>
+          </div>
+        </div>
+
+        <!-- Memory Browser -->
+        <div class="harness-section" id="harness-memory">
+          <div class="harness-section-header" data-collapse="memory">
+            <h4 data-i18n="harness.memory">Memory</h4>
+            <span class="harness-badge" id="memory-badge"></span>
+            <span class="harness-chevron">&#9660;</span>
+          </div>
+          <p class="harness-desc" data-i18n="harness.memory.desc">Persistent memory across sessions</p>
+          <div class="harness-section-body" id="memory-body">
+            <div id="memory-empty" class="harness-empty">
+              <p data-i18n="harness.memory.empty">No memory files found.</p>
+            </div>
+            <div id="memory-list"></div>
+          </div>
+        </div>
+
+        <!-- Projects -->
+        <div class="harness-section" id="harness-projects">
+          <div class="harness-section-header" data-collapse="projects">
+            <h4 data-i18n="harness.projects">Projects</h4>
+            <span class="harness-badge" id="projects-badge"></span>
+            <span class="harness-chevron">&#9660;</span>
+          </div>
+          <p class="harness-desc" data-i18n="harness.projects.desc">Quick-switch between projects</p>
+          <div class="harness-section-body" id="projects-body">
+            <div id="projects-empty" class="harness-empty">
+              <p data-i18n="harness.projects.empty">No projects registered.</p>
+            </div>
+            <div id="projects-list"></div>
+            <button class="harness-btn" id="projects-add-btn" data-i18n="harness.projects.add">Add Project</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar (Simple mode) -->
+      <div id="sidebar">
+        <div class="sb-section">
+          <h3 data-i18n="sidebar.commands">Commands</h3>
+          <div class="cmd-list">
+            <div class="cmd" data-cmd="/help"><span class="cmd-name">/help</span><span class="cmd-desc" data-i18n="cmd.help">Show help</span></div>
+            <div class="cmd" data-cmd="/clear"><span class="cmd-name">/clear</span><span class="cmd-desc" data-i18n="cmd.clear">Clear conversation</span></div>
+            <div class="cmd" data-cmd="/compact"><span class="cmd-name">/compact</span><span class="cmd-desc" data-i18n="cmd.compact">Compact conversation</span></div>
+            <div class="cmd" data-cmd="/cost"><span class="cmd-name">/cost</span><span class="cmd-desc" data-i18n="cmd.cost">Show cost</span></div>
+            <div class="cmd" data-cmd="/model"><span class="cmd-name">/model</span><span class="cmd-desc" data-i18n="cmd.model">Change model</span></div>
+            <div class="cmd" data-cmd="/permissions"><span class="cmd-name">/permissions</span><span class="cmd-desc" data-i18n="cmd.permissions">Permission settings</span></div>
+            <div class="cmd" data-cmd="/review"><span class="cmd-name">/review</span><span class="cmd-desc" data-i18n="cmd.review">Request review</span></div>
+          </div>
+        </div>
+
+        <div class="sb-section">
+          <h3 data-i18n="sidebar.shortcuts">Shortcuts</h3>
+          <div class="shortcut-list">
+            <div class="sc"><kbd>Enter&#215;2</kbd><span data-i18n="shortcut.send">Send</span></div>
+            <div class="sc"><kbd>Cmd+Enter</kbd><span data-i18n="shortcut.send">Send</span></div>
+            <div class="sc"><kbd>Cmd+T</kbd><span data-i18n="shortcut.newtab">New tab</span></div>
+            <div class="sc"><kbd>Cmd+W</kbd><span data-i18n="shortcut.closetab">Close tab</span></div>
+            <div class="sc"><kbd>Cmd+1-9</kbd><span data-i18n="shortcut.switchtab">Switch tab</span></div>
+            <div class="sc"><kbd>Cmd+S</kbd><span data-i18n="shortcut.save">Save</span></div>
+            <div class="sc"><kbd>Alt+&#8593;&#8595;</kbd><span data-i18n="shortcut.history">Input history</span></div>
+          </div>
+        </div>
+
+        <div class="sb-section">
+          <h3 data-i18n="sidebar.prompts">Example Prompts</h3>
+          <div class="prompt-list">
+            <div class="prompt-ex" data-prompt="Tell me about this project's structure" data-i18n="prompt.structure">Ask about structure</div>
+            <div class="prompt-ex" data-prompt="Find and fix bugs in this file" data-i18n="prompt.bugfix">Fix bugs</div>
+            <div class="prompt-ex" data-prompt="Run tests and show results" data-i18n="prompt.test">Run tests</div>
+            <div class="prompt-ex" data-prompt="Check git status and commit changes" data-i18n="prompt.git">Git commit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="statusbar">
+      <span id="status-indicator">&#9679;</span>
+      <span id="status-text" data-i18n="status.ready">Ready</span>
+      <span id="status-spacer"></span>
+      <span id="status-mode">Claude Code</span>
+      <span id="status-cwd"></span>
+    </div>
+
+    <!-- Work Log Panel -->
+    <div id="worklog-panel" class="hidden">
+      <div id="worklog-header">
+        <h3 data-i18n="worklog.title">Work Log</h3>
+        <button id="worklog-close">&times;</button>
+      </div>
+      <div id="worklog-list"></div>
+    </div>
+
+    <!-- Input Area -->
+    <div id="input-area">
+      <div id="quick-actions">
+        <button class="qbtn accept" data-input="y\r" title="Yes (Y)"><span data-i18n="btn.yes">&#10003; Yes</span></button>
+        <button class="qbtn reject" data-input="n\r" title="No (N)"><span data-i18n="btn.no">&#10007; No</span></button>
+        <button class="qbtn interrupt" data-input="\x03" title="Stop (Ctrl+C)"><span data-i18n="btn.interrupt">&#9632; Stop</span></button>
+        <button class="qbtn escape" data-input="\x1b" title="Escape"><span>Esc</span></button>
+        <div id="quick-spacer"></div>
+        <button class="qbtn worklog-btn" id="worklog-toggle" title="Work Log"><span data-i18n="btn.log">&#128203; Log</span></button>
+      </div>
+      <!-- Builder Prompt (shown only in Builder mode) -->
+      <div id="builder-input-row">
+        <div id="builder-dev-toggle">
+          <button class="bdev-btn active" data-devmode="nocode" data-i18n="builder.devmode.auto">Auto</button>
+          <button class="bdev-btn" data-devmode="lowcode" data-i18n="builder.devmode.collab">Collaborate</button>
+        </div>
+        <textarea id="builder-prompt" data-i18n-placeholder="builder.prompt.placeholder" placeholder="What do you want to build? e.g. Create a restaurant booking app" rows="2"></textarea>
+        <button id="builder-send-btn" data-i18n="input.send">Send</button>
+      </div>
+      <!-- Normal Prompt -->
+      <div id="input-row">
+        <textarea id="prompt-input" data-i18n-placeholder="input.placeholder" placeholder="Type your prompt... (Enter to send, Shift+Enter for newline)" rows="2"></textarea>
+        <button id="send-btn" data-i18n="input.send">Send</button>
+      </div>
+      <div id="enter-hint" class="hidden"></div>
+      <div id="hint" data-i18n="input.hint">Enter send · Shift+Enter newline · Cmd+T new tab</div>
+    </div>
+  </div>
+
+  <!-- Setup Dialog (Claude CLI not found) -->
+  <div id="setup-dialog" class="dialog hidden">
+    <div class="dialog-content">
+      <h2 data-i18n="setup.title">Claude Code CLI Not Found</h2>
+      <p data-i18n="setup.desc">This app requires Claude Code CLI to function.</p>
+
+      <div class="setup-steps">
+        <div class="setup-step">
+          <span class="step-num">1</span>
+          <div>
+            <strong>Node.js</strong> <span data-i18n="setup.step1">Check that Node.js is installed</span><br>
+            <small data-i18n="setup.step1.sub">If not: install from https://nodejs.org</small>
+          </div>
+        </div>
+        <div class="setup-step">
+          <span class="step-num">2</span>
+          <div>
+            <strong>Claude Code CLI</strong> <span data-i18n="setup.step2">Install Claude Code CLI</span><br>
+            <small><code>npm install -g @anthropic-ai/claude-code</code></small>
+          </div>
+        </div>
+        <div class="setup-step">
+          <span class="step-num">3</span>
+          <div>
+            <strong>Anthropic</strong> <span data-i18n="setup.step3">Login with Anthropic account</span><br>
+            <small data-i18n="setup.step3.sub">Requires Pro plan or API key</small>
+          </div>
+        </div>
+      </div>
+
+      <div id="setup-status" style="margin: 12px 0; font-size: 13px;"></div>
+
+      <div style="display: flex; gap: 8px;">
+        <button id="setup-auto-install" class="setup-btn primary" data-i18n="setup.install">Auto Install</button>
+        <button id="setup-skip" class="setup-btn" data-i18n="setup.skip">Open Terminal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Dialog -->
+  <div id="settings-dialog" class="dialog hidden">
+    <div class="dialog-content settings-content">
+      <div class="dialog-header">
+        <h2 data-i18n="settings.title">Settings</h2>
+        <button id="settings-close" class="dialog-close-btn">&times;</button>
+      </div>
+
+      <div class="settings-section">
+        <h3 data-i18n="settings.display">Display</h3>
+        <div class="setting-row">
+          <label data-i18n="settings.fontsize">Font Size</label>
+          <div class="setting-control">
+            <button class="setting-btn" id="font-dec">-</button>
+            <span id="font-size-val">14</span>px
+            <button class="setting-btn" id="font-inc">+</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label data-i18n="settings.double.enter">Double Enter Delay (ms)</label>
+          <div class="setting-control">
+            <input type="range" id="double-enter-delay" min="200" max="1000" step="50" value="500">
+            <span id="double-enter-val">500</span>ms
+          </div>
+        </div>
+        <div class="setting-row">
+          <label data-i18n="settings.autosave">Auto-save Interval (sec)</label>
+          <div class="setting-control">
+            <input type="range" id="autosave-interval" min="5" max="60" step="5" value="10">
+            <span id="autosave-val">10</span>s
+          </div>
+        </div>
+        <div class="setting-row">
+          <label data-i18n="settings.language">Language</label>
+          <div class="setting-control">
+            <select id="lang-select"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 data-i18n="settings.edit">Edit This App</h3>
+        <div class="setting-row">
+          <label data-i18n="settings.edit.claude">Open in Claude Code</label>
+          <div class="setting-control">
+            <button class="setup-btn primary" id="btn-edit-claude">Claude Code</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label data-i18n="settings.edit.codex">Open in Codex</label>
+          <div class="setting-control">
+            <button class="setup-btn" id="btn-edit-codex">Codex</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label data-i18n="settings.edit.folder">Open Folder</label>
+          <div class="setting-control">
+            <button class="setup-btn" id="btn-open-folder" data-i18n="settings.edit.finder">Open in Finder</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 data-i18n="settings.update">Update</h3>
+        <div class="setting-row">
+          <label id="update-status-label" data-i18n="settings.update.check">Check for Updates</label>
+          <div class="setting-control">
+            <button class="setup-btn primary" id="btn-check-update" data-i18n="settings.update.btn">Check</button>
+          </div>
+        </div>
+        <div id="update-info" class="hidden" style="margin-top: 8px;">
+          <pre id="update-changes" style="font-size: 11px; color: var(--fg2); max-height: 100px; overflow-y: auto;"></pre>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button class="setup-btn primary" id="btn-apply-update" data-i18n="settings.update.apply">Update & Restart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 data-i18n="settings.data">Data</h3>
+        <div class="setting-row">
+          <label data-i18n="settings.data.worklog">Work Log</label>
+          <div class="setting-control">
+            <button class="setup-btn" id="btn-clear-worklog" data-i18n="settings.data.clear">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 data-i18n="settings.build">Build</h3>
+        <div class="setting-row">
+          <label data-i18n="settings.build.native">Build as Native App</label>
+          <div class="setting-control">
+            <button class="setup-btn primary" id="btn-build-app" data-i18n="settings.build.start">Start Build</button>
+          </div>
+        </div>
+        <div id="build-status" style="margin-top: 4px; font-size: 11px; color: var(--fg2);"></div>
+      </div>
+
+      <div id="app-info" style="margin-top: 12px; font-size: 11px; color: var(--fg2); text-align: center;"></div>
+    </div>
+  </div>
+
+  <script src="../node_modules/xterm/lib/xterm.js"></script>
+  <script src="../node_modules/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
