@@ -75,6 +75,8 @@ const history = [];
 let histIdx = 0;
 let appSettings = { fontSize: 14, autoSaveInterval: 10, doubleEnterDelay: 500 };
 let builderDevMode = 'nocode';
+let claudeMdScope = 'project';
+let licenseFeatures = null;
 
 // ── Boot ──
 document.addEventListener('DOMContentLoaded', async () => {
@@ -246,6 +248,10 @@ function setupListeners() {
   // Harness panel
   setupHarnessListeners();
 
+  // License
+  setupLicenseListeners();
+  loadLicenseStatus();
+
   // Edit this app
   document.getElementById('btn-edit-claude').addEventListener('click', editAppWithClaude);
   document.getElementById('btn-edit-codex').addEventListener('click', editAppWithCodex);
@@ -395,20 +401,43 @@ function setupHarnessListeners() {
     });
   });
 
-  // CLAUDE.md
+  // CLAUDE.md scope toggle
+  document.querySelectorAll('.claudemd-scope-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.claudemd-scope-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      claudeMdScope = btn.dataset.scope;
+      loadClaudeMd();
+    });
+  });
+
+  // CLAUDE.md create
   document.getElementById('claudemd-create-btn').addEventListener('click', async () => {
     const tab = tabs.get(activeId);
-    if (!tab) return;
-    const template = `# Project Instructions\n\n- Build: npm run build\n- Test: npm test\n- Lint: npm run lint\n\n## Architecture\n\n- Framework: \n- Database: \n\n## Conventions\n\n- \n`;
-    const result = await window.api.harnessWriteClaudeMd(tab.session.cwd, template);
+    const template = claudeMdScope === 'user'
+      ? `# User Global Instructions\n\n## Common Rules\n\n- \n`
+      : `# Project Instructions\n\n- Build: npm run build\n- Test: npm test\n- Lint: npm run lint\n\n## Architecture\n\n- Framework: \n- Database: \n\n## Conventions\n\n- \n`;
+    let result;
+    if (claudeMdScope === 'user') {
+      result = await window.api.harnessWriteUserClaudeMd(template);
+    } else {
+      if (!tab) return;
+      result = await window.api.harnessWriteClaudeMd(tab.session.cwd, template);
+    }
     if (result.success) loadClaudeMd();
   });
 
+  // CLAUDE.md save
   document.getElementById('claudemd-save-btn').addEventListener('click', async () => {
     const tab = tabs.get(activeId);
-    if (!tab) return;
     const content = document.getElementById('claudemd-textarea').value;
-    const result = await window.api.harnessWriteClaudeMd(tab.session.cwd, content);
+    let result;
+    if (claudeMdScope === 'user') {
+      result = await window.api.harnessWriteUserClaudeMd(content);
+    } else {
+      if (!tab) return;
+      result = await window.api.harnessWriteClaudeMd(tab.session.cwd, content);
+    }
     const status = document.getElementById('claudemd-status');
     if (result.success) {
       status.textContent = t('harness.claudemd.saved');
@@ -428,21 +457,35 @@ function setupHarnessListeners() {
     const folder = await window.api.harnessPickFolder();
     if (!folder) return;
     const projects = await window.api.harnessLoadProjects();
-    if (projects.find(p => p.path === folder)) return; // already exists
+    if (projects.find(p => p.path === folder)) return;
     const name = folder.split('/').pop() || folder;
     projects.push({ name, path: folder });
     await window.api.harnessSaveProjects(projects);
     loadProjects();
   });
+
+  // Memory dialog
+  setupMemoryDialog();
 }
 
 async function loadClaudeMd() {
   const tab = tabs.get(activeId);
-  if (!tab) return;
-  const result = await window.api.harnessReadClaudeMd(tab.session.cwd);
+  let result;
+  if (claudeMdScope === 'user') {
+    result = await window.api.harnessReadUserClaudeMd();
+  } else {
+    if (!tab) return;
+    result = await window.api.harnessReadClaudeMd(tab.session.cwd);
+  }
   const emptyEl = document.getElementById('claudemd-empty');
   const editorEl = document.getElementById('claudemd-editor');
   const badge = document.getElementById('claudemd-badge');
+  const emptyText = emptyEl.querySelector('p');
+  if (emptyText) {
+    emptyText.textContent = claudeMdScope === 'user'
+      ? t('harness.claudemd.empty.user')
+      : t('harness.claudemd.empty');
+  }
 
   if (result.exists) {
     emptyEl.classList.add('hidden');
@@ -479,17 +522,28 @@ async function loadHooks() {
   for (const event of events) {
     const hooks = allHooks[event];
     if (!Array.isArray(hooks)) continue;
-    for (const hook of hooks) {
+    for (let hi = 0; hi < hooks.length; hi++) {
+      const hook = hooks[hi];
       count++;
       const item = document.createElement('div');
       item.className = 'hook-item';
       item.innerHTML = `
         <div class="hook-item-header">
           <span class="hook-event">${esc(event)}</span>
-          <button class="hook-delete" data-event="${esc(event)}" data-idx="${count-1}">&times;</button>
+          <button class="hook-delete">&times;</button>
         </div>
         <div class="hook-detail">${hook.matcher ? `<span>${esc(hook.matcher)}</span> → ` : ''}${esc(hook.command || '')}</div>
       `;
+      item.querySelector('.hook-delete').addEventListener('click', async () => {
+        const current = await window.api.harnessReadHooks(tab.session.cwd);
+        const projectHooks = current.project || {};
+        if (projectHooks[event] && Array.isArray(projectHooks[event])) {
+          projectHooks[event].splice(hi, 1);
+          if (projectHooks[event].length === 0) delete projectHooks[event];
+        }
+        await window.api.harnessWriteHooks(tab.session.cwd, projectHooks);
+        loadHooks();
+      });
       listEl.appendChild(item);
     }
   }
@@ -525,7 +579,13 @@ async function addNewHook() {
     const event = form.querySelector('.hook-event-select').value;
     const matcher = form.querySelector('.hook-matcher-input').value.trim();
     const command = form.querySelector('.hook-command-input').value.trim();
-    if (!command) return;
+    const cmdInput = form.querySelector('.hook-command-input');
+    if (!command) {
+      cmdInput.style.borderColor = 'var(--red)';
+      cmdInput.placeholder = 'Command is required';
+      cmdInput.focus();
+      return;
+    }
 
     const result = await window.api.harnessReadHooks(tab.session.cwd);
     const hooks = result.project || {};
@@ -566,8 +626,69 @@ async function loadMemory() {
         <div class="memory-type">${esc(mem.type)} — ${esc(mem.description)}</div>
       </div>
     `;
+    item.addEventListener('click', () => openMemoryDialog(mem));
     listEl.appendChild(item);
   }
+}
+
+async function openMemoryDialog(mem) {
+  const dialog = document.getElementById('memory-dialog');
+  const title = document.getElementById('memory-dialog-title');
+  const typeTag = document.getElementById('memory-dialog-type');
+  const desc = document.getElementById('memory-dialog-desc');
+  const textarea = document.getElementById('memory-dialog-textarea');
+  const status = document.getElementById('memory-dialog-status');
+
+  title.textContent = mem.name;
+  typeTag.textContent = mem.type;
+  desc.textContent = mem.description;
+  status.textContent = '';
+
+  const result = await window.api.harnessReadMemoryContent(mem.file);
+  textarea.value = result.content || '';
+  dialog.dataset.file = mem.file;
+  dialog.classList.remove('hidden');
+}
+
+function setupMemoryDialog() {
+  const dialog = document.getElementById('memory-dialog');
+  const closeBtn = document.getElementById('memory-dialog-close');
+  const saveBtn = document.getElementById('memory-dialog-save');
+  const deleteBtn = document.getElementById('memory-dialog-delete');
+  const status = document.getElementById('memory-dialog-status');
+
+  closeBtn.addEventListener('click', () => dialog.classList.add('hidden'));
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.classList.add('hidden');
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const file = dialog.dataset.file;
+    const content = document.getElementById('memory-dialog-textarea').value;
+    const result = await window.api.harnessWriteMemory(file, content);
+    if (result.success) {
+      status.textContent = t('harness.claudemd.saved');
+      status.style.color = 'var(--green)';
+      setTimeout(() => { status.textContent = ''; }, 2000);
+      loadMemory();
+    } else {
+      status.textContent = result.error;
+      status.style.color = 'var(--red)';
+    }
+  });
+
+  deleteBtn.addEventListener('click', async () => {
+    const file = dialog.dataset.file;
+    if (!confirm(`Delete "${file}"?`)) return;
+    const result = await window.api.harnessDeleteMemory(file);
+    if (result.success) {
+      dialog.classList.add('hidden');
+      loadMemory();
+    } else {
+      status.textContent = result.error;
+      status.style.color = 'var(--red)';
+    }
+  });
 }
 
 async function loadProjects() {
@@ -711,6 +832,16 @@ async function switchSessionMode(newMode) {
 
 // ── Tab Management ──
 async function newTab(mode, cwd) {
+  // Pro restriction: tab limit
+  if (licenseFeatures && licenseFeatures.maxTabs !== Infinity && tabs.size >= licenseFeatures.maxTabs) {
+    alert(`Free plan allows up to ${licenseFeatures.maxTabs} tabs. Upgrade to Pro for unlimited tabs.`);
+    return;
+  }
+  // Pro restriction: Aider mode
+  if (mode === 'aider' && licenseFeatures && !licenseFeatures.aiderMode) {
+    alert('Aider mode is a Pro feature. Upgrade to unlock.');
+    return;
+  }
   try {
     const session = await window.api.createSession({ mode: mode || 'claude', cwd });
     addTab(session);
@@ -1254,4 +1385,110 @@ function esc(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+// ── License ──
+async function loadLicenseStatus() {
+  const status = await window.api.licenseStatus();
+  licenseFeatures = status.features;
+  updateLicenseUI(status);
+  applyProRestrictions();
+}
+
+function updateLicenseUI(status) {
+  const label = document.getElementById('license-status-label');
+  const badge = document.getElementById('license-pro-badge');
+  const inputRow = document.getElementById('license-input-row');
+  const activeRow = document.getElementById('license-active-row');
+  const activeInfo = document.getElementById('license-active-info');
+  const errEl = document.getElementById('license-error');
+  if (!label) return;
+
+  errEl.textContent = '';
+  if (status.isPro) {
+    label.textContent = 'Pro';
+    badge.classList.remove('hidden');
+    inputRow.classList.add('hidden');
+    activeRow.classList.remove('hidden');
+    activeInfo.textContent = `Key: ${status.key} | Activated: ${status.activatedAt?.split('T')[0] || ''}`;
+  } else {
+    label.textContent = 'Free';
+    badge.classList.add('hidden');
+    inputRow.classList.remove('hidden');
+    activeRow.classList.add('hidden');
+  }
+}
+
+function setupLicenseListeners() {
+  const activateBtn = document.getElementById('btn-license-activate');
+  const deactivateBtn = document.getElementById('btn-license-deactivate');
+  const errEl = document.getElementById('license-error');
+  if (!activateBtn) return;
+
+  activateBtn.addEventListener('click', async () => {
+    const input = document.getElementById('license-key-input');
+    const key = input.value.trim();
+    if (!key) { errEl.textContent = 'Please enter a license key'; return; }
+    activateBtn.disabled = true;
+    activateBtn.textContent = '...';
+    errEl.textContent = '';
+    const result = await window.api.licenseActivate(key);
+    activateBtn.disabled = false;
+    activateBtn.textContent = 'Activate';
+    if (result.success) {
+      input.value = '';
+      await loadLicenseStatus();
+    } else {
+      errEl.textContent = result.error || 'Activation failed';
+    }
+  });
+
+  deactivateBtn.addEventListener('click', async () => {
+    if (!confirm('Deactivate Pro license?')) return;
+    await window.api.licenseDeactivate();
+    await loadLicenseStatus();
+  });
+}
+
+function applyProRestrictions() {
+  if (!licenseFeatures) return;
+  const isPro = licenseFeatures.maxTabs === Infinity;
+
+  // Aider mode button
+  const aiderBtn = document.querySelector('.mode-btn[data-mode="aider"]');
+  if (aiderBtn) {
+    if (!isPro) {
+      aiderBtn.classList.add('pro-locked');
+      aiderBtn.title = 'Pro feature';
+    } else {
+      aiderBtn.classList.remove('pro-locked');
+      aiderBtn.title = '';
+    }
+  }
+
+  // Builder cards: lock non-free templates
+  if (!isPro && Array.isArray(licenseFeatures.builderTemplates)) {
+    document.querySelectorAll('.bcard[data-target]').forEach(card => {
+      if (!licenseFeatures.builderTemplates.includes(card.dataset.target)) {
+        card.classList.add('pro-locked');
+      } else {
+        card.classList.remove('pro-locked');
+      }
+    });
+  } else {
+    document.querySelectorAll('.bcard.pro-locked').forEach(c => c.classList.remove('pro-locked'));
+  }
+
+  // Status bar pro badge
+  const modeEl = document.getElementById('status-mode');
+  if (modeEl && isPro && !modeEl.querySelector('.pro-tag')) {
+    const tag = document.createElement('span');
+    tag.className = 'pro-tag';
+    tag.textContent = ' PRO';
+    tag.style.cssText = 'font-size:9px;background:var(--accent);color:var(--bg1);padding:1px 4px;border-radius:3px;margin-left:4px;font-weight:700;';
+    modeEl.appendChild(tag);
+  } else if (modeEl && !isPro) {
+    const tag = modeEl.querySelector('.pro-tag');
+    if (tag) tag.remove();
+  }
 }

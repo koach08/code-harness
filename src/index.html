@@ -150,6 +150,10 @@
           </div>
           <p class="harness-desc" data-i18n="harness.claudemd.desc">Project instructions for AI</p>
           <div class="harness-section-body" id="claudemd-body">
+            <div id="claudemd-scope-toggle">
+              <button class="claudemd-scope-btn active" data-scope="project" data-i18n="harness.claudemd.project">Project</button>
+              <button class="claudemd-scope-btn" data-scope="user" data-i18n="harness.claudemd.user">User (~/.claude)</button>
+            </div>
             <div id="claudemd-empty" class="harness-empty">
               <p data-i18n="harness.claudemd.empty">No CLAUDE.md found in this project.</p>
               <button class="harness-btn primary" id="claudemd-create-btn" data-i18n="harness.claudemd.create">Create CLAUDE.md</button>
@@ -382,6 +386,25 @@
       </div>
 
       <div class="settings-section">
+        <h3>License</h3>
+        <div id="license-status-row" class="setting-row">
+          <label id="license-status-label">Free</label>
+          <div class="setting-control">
+            <span id="license-pro-badge" class="license-badge hidden">PRO</span>
+          </div>
+        </div>
+        <div id="license-input-row" class="setting-row">
+          <input type="text" id="license-key-input" placeholder="Enter license key" class="license-input">
+          <button class="setup-btn primary" id="btn-license-activate">Activate</button>
+        </div>
+        <div id="license-active-row" class="setting-row hidden">
+          <label id="license-active-info"></label>
+          <button class="setup-btn" id="btn-license-deactivate">Deactivate</button>
+        </div>
+        <div id="license-error" style="font-size: 11px; color: var(--red); margin-top: 4px;"></div>
+      </div>
+
+      <div class="settings-section">
         <h3 data-i18n="settings.edit">Edit This App</h3>
         <div class="setting-row">
           <label data-i18n="settings.edit.claude">Open in Claude Code</label>
@@ -441,6 +464,26 @@
       </div>
 
       <div id="app-info" style="margin-top: 12px; font-size: 11px; color: var(--fg2); text-align: center;"></div>
+    </div>
+  </div>
+
+  <!-- Memory Edit Dialog -->
+  <div id="memory-dialog" class="dialog hidden">
+    <div class="dialog-content memory-dialog-content">
+      <div class="dialog-header">
+        <h2 id="memory-dialog-title">Memory</h2>
+        <button id="memory-dialog-close" class="dialog-close-btn">&times;</button>
+      </div>
+      <div class="memory-meta">
+        <span id="memory-dialog-type" class="memory-meta-tag"></span>
+        <span id="memory-dialog-desc" class="memory-meta-desc"></span>
+      </div>
+      <textarea id="memory-dialog-textarea" spellcheck="false"></textarea>
+      <div class="memory-dialog-actions">
+        <button class="harness-btn primary" id="memory-dialog-save" data-i18n="harness.memory.save">Save</button>
+        <button class="harness-btn memory-dialog-delete" id="memory-dialog-delete" data-i18n="harness.memory.delete">Delete</button>
+        <span id="memory-dialog-status"></span>
+      </div>
     </div>
   </div>
 

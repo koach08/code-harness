@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execSync, spawn } = require('child_process');
+const license = require('./license');
 
 const APP_DIR = path.join(os.homedir(), '.code-harness');
 const BUFFERS_DIR = path.join(APP_DIR, 'buffers');
@@ -399,6 +400,27 @@ ipcMain.handle('harness-write-claudemd', async (_e, { cwd, content }) => {
   }
 });
 
+ipcMain.handle('harness-read-user-claudemd', async () => {
+  const filePath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+  try {
+    if (fs.existsSync(filePath)) {
+      return { exists: true, content: fs.readFileSync(filePath, 'utf-8') };
+    }
+    return { exists: false, content: '' };
+  } catch { return { exists: false, content: '' }; }
+});
+
+ipcMain.handle('harness-write-user-claudemd', async (_e, { content }) => {
+  const dir = path.join(os.homedir(), '.claude');
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'CLAUDE.md'), content, 'utf-8');
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 // ── Harness Engineering: Hooks (settings.json) ──
 ipcMain.handle('harness-read-hooks', async (_e, { cwd }) => {
   // Check project-level settings
@@ -461,6 +483,36 @@ ipcMain.handle('harness-read-memory', async () => {
   return result;
 });
 
+ipcMain.handle('harness-read-memory-content', async (_e, { file }) => {
+  const memoryDir = path.join(os.homedir(), '.claude', 'memory');
+  try {
+    return { content: fs.readFileSync(path.join(memoryDir, file), 'utf-8') };
+  } catch (e) {
+    return { content: '', error: e.message };
+  }
+});
+
+ipcMain.handle('harness-write-memory', async (_e, { file, content }) => {
+  const memoryDir = path.join(os.homedir(), '.claude', 'memory');
+  try {
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(path.join(memoryDir, file), content, 'utf-8');
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('harness-delete-memory', async (_e, { file }) => {
+  const memoryDir = path.join(os.homedir(), '.claude', 'memory');
+  try {
+    fs.unlinkSync(path.join(memoryDir, file));
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 // ── Harness Engineering: Projects ──
 const PROJECTS_FILE = path.join(APP_DIR, 'projects.json');
 
@@ -489,6 +541,19 @@ ipcMain.handle('harness-pick-folder', async () => {
   });
   if (result.canceled || !result.filePaths.length) return null;
   return result.filePaths[0];
+});
+
+// ── License ──
+ipcMain.handle('license-status', async () => {
+  return { ...license.getLicenseStatus(), features: license.getFeatures() };
+});
+
+ipcMain.handle('license-activate', async (_e, { key }) => {
+  return await license.activateLicense(key);
+});
+
+ipcMain.handle('license-deactivate', async () => {
+  return license.deactivateLicense();
 });
 
 // ── Scan project ──

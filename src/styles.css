@@ -291,6 +291,18 @@ body[data-ui="harness"] #builder-panel { display: none; }
 }
 .harness-btn.primary:hover { background: var(--accent2); }
 
+/* CLAUDE.md scope toggle */
+#claudemd-scope-toggle {
+  display: flex; gap: 1px; margin-bottom: 8px;
+}
+.claudemd-scope-btn {
+  flex: 1; padding: 5px 8px; border: 1px solid var(--border); background: transparent;
+  color: var(--fg2); font-size: 11px; cursor: pointer; transition: all .15s;
+}
+.claudemd-scope-btn:first-child { border-radius: 5px 0 0 5px; }
+.claudemd-scope-btn:last-child { border-radius: 0 5px 5px 0; }
+.claudemd-scope-btn.active { background: var(--accent); color: var(--bg1); border-color: var(--accent); }
+
 /* CLAUDE.md editor */
 #claudemd-textarea {
   width: 100%; min-height: 200px; max-height: 400px;
@@ -643,6 +655,52 @@ input[type="range"]::-webkit-slider-thumb {
 .worklog-empty {
   text-align: center; padding: 20px; color: var(--fg2); font-size: 13px;
 }
+
+/* ── License ── */
+.license-input {
+  flex: 1; background: var(--bg1); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--fg); padding: 6px 10px;
+  font-family: 'Menlo', monospace; font-size: 12px; outline: none;
+}
+.license-input:focus { border-color: var(--accent); }
+.license-badge {
+  padding: 2px 10px; border-radius: 10px; font-size: 10px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  color: var(--bg1);
+}
+.pro-locked {
+  position: relative; pointer-events: none; opacity: .5;
+}
+.pro-locked::after {
+  content: 'PRO'; position: absolute; top: 4px; right: 4px;
+  font-size: 8px; font-weight: 700; padding: 1px 4px; border-radius: 3px;
+  background: var(--accent); color: var(--bg1);
+}
+
+/* ── Memory Edit Dialog ── */
+.memory-dialog-content { min-width: 500px; max-width: 600px; }
+.memory-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.memory-meta-tag {
+  font-size: 10px; padding: 2px 8px; border-radius: 8px;
+  background: var(--accent); color: var(--bg1); font-weight: 600;
+  text-transform: uppercase;
+}
+.memory-meta-desc { font-size: 12px; color: var(--fg2); flex: 1; }
+#memory-dialog-textarea {
+  width: 100%; min-height: 300px; max-height: 50vh;
+  background: var(--bg1); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--fg); padding: 10px; font-family: 'Menlo', monospace;
+  font-size: 12px; line-height: 1.5; resize: vertical; outline: none;
+}
+#memory-dialog-textarea:focus { border-color: var(--accent); }
+.memory-dialog-actions {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+}
+.memory-dialog-actions .harness-btn { width: auto; margin-top: 0; }
+.memory-dialog-delete { border-color: var(--red) !important; color: var(--red) !important; }
+.memory-dialog-delete:hover { background: rgba(247,118,142,.1) !important; }
+#memory-dialog-status { font-size: 11px; flex: 1; text-align: right; }
 
 /* ── Utility ── */
 .hidden { display: none !important; }

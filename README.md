@@ -103,6 +103,22 @@ Harness Engineering is the practice of optimizing the configuration layer around
 
 Code Harness gives you a visual interface to manage all of these — no manual file editing required.
 
+## Free vs Pro
+
+| Feature | Free | Pro |
+|---------|------|-----|
+| Claude Code / Codex / Terminal | Yes | Yes |
+| Simple / Advanced UI | Yes | Yes |
+| Session persistence | Yes | Yes |
+| Multi-tab | Up to 3 | Unlimited |
+| Aider mode | - | Yes |
+| Builder templates | 5 basic | 40+ full |
+| Hooks editing | View only | Full CRUD |
+| Memory editing | View only | Full CRUD |
+| Projects | Up to 3 | Unlimited |
+
+Get a Pro license at [our website](https://www.language-smartlearning.com/).
+
 ## Architecture
 
 Each user runs AI tools with **their own accounts and API keys**. Code Harness is a UI layer — no keys are stored or shared.

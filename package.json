@@ -1,6 +1,6 @@
 {
   "name": "code-harness",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Code Harness - AI Code Editor Control Center. Manage Claude Code, Codex, and more from one place.",
   "main": "main.js",
   "author": {
@@ -110,6 +110,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "license.js",
       "src/**/*",
       "!src/**/*.map"
     ],
